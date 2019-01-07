@@ -80,7 +80,7 @@ driver = webdriver.Chrome(options=chrome_options)
 # add a script which will be executed when the page starts loading -> makes selenium harder to detect
 driver.add_script(scriptjs)
 
-driver.get("https://login.aliexpress.com/buyer.htm")
+driver.get("https://trade.aliexpress.com/orderList.htm")
 
 time.sleep(1)
 action  = ActionChains(driver)
@@ -90,3 +90,31 @@ action = action.send_keys(Keys.TAB)
 action = action.send_keys(password)
 action = action.send_keys(Keys.ENTER)
 action.perform()
+
+time.sleep(2)
+if("passport" not in str(driver.current_url)):
+    print (driver.current_url)
+    driver.find_element_by_class_name("button-confirmOrderReceived").click()
+    driver.find_element_by_id("select-all").click()
+    time.sleep(0.2)
+    driver.find_element_by_id("button-confirmOrderReceived").click()
+    
+    try:
+        element_present = EC.presence_of_element_located((By.ID, 'confirm_cpf'))
+        WebDriverWait(driver, timeout).until(element_present)
+    except TimeoutException:
+        print("error")
+    driver.find_element_by_id("confirm_cpf").click()
+    feedbackStars=driver.find_elements_by_class_name("star-5")
+    feedbackStars[0].click()
+    feedbackStars[1].click()
+    feedbackStars[2].click()
+    time.sleep(0.3)
+    driver.find_element_by_class_name("ui-textfield-system").send_keys("This is good product!")
+    time.sleep(0.3)
+    driver.find_element_by_id("buyerLeavefb-submit-btn").click()
+    feedbackStatus=driver.find_element_by_class_name("ui-feedback-header").text
+    print(feedbackStatus)
+
+else:
+    print("Account needs to be verifyied")
