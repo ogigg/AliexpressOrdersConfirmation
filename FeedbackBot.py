@@ -51,6 +51,9 @@ def next_available_row(worksheet):
     str_list = list(filter(None, sheet.col_values(1)))  # fastest
     return str(len(str_list)+1)
 
+def randomFeedbackComment():
+    commentList=["Good product!","Very fast delivery! I really recommend it", "Nice item!", "I would buy it again!","Perfect seller!", "Good price, orginal product", "Item  great. As described"]
+    return random.choice(commentList)
 scriptjs=""
 with open('script.js', 'r') as myfile:
   scriptjs= myfile.read()
@@ -60,61 +63,69 @@ with open(("accounts.txt")) as f: #first line-password, next lines - emails
     line = f.readlines()
 emails = [x.strip() for x in line] 
 password=emails[0]
-email=emails[1] #currently one email supported
+emails=emails[1:] 
+print(emails)
+for email in emails:
+    print("email: "+str(email))
 
-print("email: "+str(email))
-print("password: "+str(password))
-IP=getIP()
-print("IP: "+ str(IP[:-1]))
-
-
-timeout = 10
-
-# launch Chrome
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('log-level=3')
-
-driver = webdriver.Chrome(options=chrome_options)
+    print("password: "+str(password))
+    IP=getIP()
+    print("IP: "+ str(IP[:-1]))
 
 
-# add a script which will be executed when the page starts loading -> makes selenium harder to detect
-driver.add_script(scriptjs)
+    timeout = 10
 
-driver.get("https://trade.aliexpress.com/orderList.htm")
+    # launch Chrome
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument('log-level=3')
 
-time.sleep(1)
-action  = ActionChains(driver)
-action = action.send_keys(Keys.TAB *3)
-action = action.send_keys(email)
-action = action.send_keys(Keys.TAB)
-action = action.send_keys(password)
-action = action.send_keys(Keys.ENTER)
-action.perform()
+    driver = webdriver.Chrome(options=chrome_options)
 
-time.sleep(2)
-if("passport" not in str(driver.current_url)):
-    print (driver.current_url)
-    driver.find_element_by_class_name("button-confirmOrderReceived").click()
-    driver.find_element_by_id("select-all").click()
-    time.sleep(0.2)
-    driver.find_element_by_id("button-confirmOrderReceived").click()
-    
-    try:
-        element_present = EC.presence_of_element_located((By.ID, 'confirm_cpf'))
-        WebDriverWait(driver, timeout).until(element_present)
-    except TimeoutException:
-        print("error")
-    driver.find_element_by_id("confirm_cpf").click()
-    feedbackStars=driver.find_elements_by_class_name("star-5")
-    feedbackStars[0].click()
-    feedbackStars[1].click()
-    feedbackStars[2].click()
-    time.sleep(0.3)
-    driver.find_element_by_class_name("ui-textfield-system").send_keys("This is good product!")
-    time.sleep(0.3)
-    driver.find_element_by_id("buyerLeavefb-submit-btn").click()
-    feedbackStatus=driver.find_element_by_class_name("ui-feedback-header").text
-    print(feedbackStatus)
 
-else:
-    print("Account needs to be verifyied")
+    # add a script which will be executed when the page starts loading -> makes selenium harder to detect
+    driver.add_script(scriptjs)
+
+    driver.get("https://trade.aliexpress.com/orderList.htm")
+
+    time.sleep(1)
+    action  = ActionChains(driver)
+    action = action.send_keys(Keys.TAB *3)
+    action = action.send_keys(email)
+    action = action.send_keys(Keys.TAB)
+    action = action.send_keys(password)
+    action = action.send_keys(Keys.ENTER)
+    action.perform()
+
+    time.sleep(2)
+    if("passport" not in str(driver.current_url)):
+        print (driver.current_url)
+        try:
+            element_present = EC.presence_of_element_located((By.CLASS_NAME, 'button-confirmOrderReceived'))
+            WebDriverWait(driver, timeout).until(element_present)
+        except TimeoutException:
+            print("error")
+        driver.find_element_by_class_name("button-confirmOrderReceived").click()
+        driver.find_element_by_id("select-all").click()
+        time.sleep(0.2)
+        driver.find_element_by_id("button-confirmOrderReceived").click()
+        
+        try:
+            element_present = EC.presence_of_element_located((By.ID, 'confirm_cpf'))
+            WebDriverWait(driver, timeout).until(element_present)
+        except TimeoutException:
+            print("error")
+        driver.find_element_by_id("confirm_cpf").click()
+        feedbackStars=driver.find_elements_by_class_name("star-5")
+        feedbackStars[0].click()
+        feedbackStars[1].click()
+        feedbackStars[2].click()
+        time.sleep(0.3)
+        driver.find_element_by_class_name("ui-textfield-system").send_keys(randomFeedbackComment())
+        time.sleep(0.3)
+        driver.find_element_by_id("buyerLeavefb-submit-btn").click()
+        feedbackStatus=driver.find_element_by_class_name("ui-feedback-header").text
+        print(feedbackStatus)
+
+    else:
+        print(str(email)+" - Account needs to be verifyied")
+    driver.quit()
