@@ -6,30 +6,21 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
 import selenium.webdriver.support.ui as ui
 from selenium.webdriver.common.keys import Keys
-from faker import Faker
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.chrome.options import Options
-import faker.providers as providers
 from random import randint
 import random
-from tkinter import Tk 
-import re
-from decimal import Decimal
-import email
-import imaplib
-from bs4 import BeautifulSoup as BS
 import os
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import requests
-import pyperclip
 from random import choice
 from datetime import datetime
-from re import sub
+
 
 def send(driver, cmd, params={}):
   resource = "/session/%s/chromium/send_command_and_get_result" % driver.session_id
@@ -52,8 +43,13 @@ def next_available_row(worksheet):
     return str(len(str_list)+1)
 
 def randomFeedbackComment():
-    commentList=["Good product!","Very fast delivery! I really recommend it", "Nice item!", "I would buy it again!","Perfect seller!", "Good price, orginal product", "Item  great. As described"]
+    commentList=["Good product!","Very fast delivery! I really recommend it", "Nice item!", "I would buy it again!","Perfect seller!", "Good price, orginal product", "Item  great. As described", "I am very happy with this product!"]
     return random.choice(commentList)
+###CONFIG
+IPcountMax=3 #How many account on one IP adress
+
+
+
 scriptjs=""
 with open('script.js', 'r') as myfile:
   scriptjs= myfile.read()
@@ -65,9 +61,19 @@ emails = [x.strip() for x in line]
 password=emails[0]
 emails=emails[1:] 
 print(emails)
+IPold=getIP()
+IPcount=0
 for email in emails:
-    print("email: "+str(email))
+    #IP Check
+    if(IPcount>=IPcountMax):
+        input("IP limit! Restart internet and press ENTER to continue!")
+        IP=getIP()
+        while(IP==IPold):
+            input("IP is the same, restart internet and press ENTER to continue!")
+            IP=getIP()
+        IPold=IP
 
+    print("email: "+str(email))
     print("password: "+str(password))
     IP=getIP()
     print("IP: "+ str(IP[:-1]))
@@ -98,7 +104,6 @@ for email in emails:
 
     time.sleep(2)
     if("passport" not in str(driver.current_url)):
-        print (driver.current_url)
         try:
             element_present = EC.presence_of_element_located((By.CLASS_NAME, 'button-confirmOrderReceived'))
             WebDriverWait(driver, timeout).until(element_present)
@@ -124,8 +129,10 @@ for email in emails:
         time.sleep(0.3)
         driver.find_element_by_id("buyerLeavefb-submit-btn").click()
         feedbackStatus=driver.find_element_by_class_name("ui-feedback-header").text
-        print(feedbackStatus)
+        print(str(email)+" - "+str(feedbackStatus))
 
     else:
         print(str(email)+" - Account needs to be verifyied")
     driver.quit()
+    IPcount=IPcount+1
+    print("\n\n")
